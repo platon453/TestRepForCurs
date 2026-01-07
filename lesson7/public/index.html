@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная — Modern Landing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #050505; --accent: #00f2ff; --glass: rgba(255, 255, 255, 0.05); }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Open Sans', sans-serif; }
+        nav { position: fixed; top: 0; width: 100%; padding: 25px; display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; }
+        nav a { color: #fff; text-decoration: none; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; transition: 0.3s; }
+        nav a:hover { color: var(--accent); }
+        .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle at center, #111 0%, #000 100%); }
+        h1 { 
+            font-family: 'Montserrat', sans-serif; 
+            font-size: 8vw; 
+            text-transform: uppercase; 
+            margin: 0; 
+            background: linear-gradient(180deg, #fff 30%, #444 100%); 
+            -webkit-background-clip: text; /* Для Chrome/Safari */
+            background-clip: text;         /* Стандартное свойство (исправляет ошибку) */
+            -webkit-text-fill-color: transparent; 
+        }
+        .tag { color: var(--accent); letter-spacing: 5px; font-weight: 600; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="#">Главная</a>
+        <a href="#">Проекты</a>
+        <a href="#">Контакты</a>
+    </nav>
+    <section class="hero">
+        <span class="tag">PREMIUM DESIGN</span>
+        <h1>Главная страница</h1> </section>
+</body>
+</html>
