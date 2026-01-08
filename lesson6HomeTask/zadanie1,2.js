@@ -5,8 +5,8 @@ const fs = require('node:fs/promises'); // модуль для чтения уд
 const PORT = 3000;
 const sendFile = async (fileName, responce, statusCode) => {
     try {
-        const fullPath = path.join(__dirname, "front", `${fileName}.html`);
-        const page = await fs.readFile(fullPath, "utf-8");
+        const fullPathHtml = path.join(__dirname, "front", `${fileName}.html`);
+        const page = await fs.readFile(fullPathHtml, "utf-8");
 
         responce.statusCode = statusCode;
         responce.end(page);
