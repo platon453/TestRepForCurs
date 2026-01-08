@@ -7,6 +7,7 @@ const sendHtml = async (fileName, responce, statusCode) => {
     try {
         const fullPathHtml = path.join(__dirname, "front", `${fileName}.html`);
         const page = await fs.readFile(fullPathHtml, "utf-8");
+        responce.setHeader("Content-type", "text/html; charset=utf-8");
 
         responce.statusCode = statusCode;
         responce.end(page);
@@ -37,8 +38,6 @@ const sendJson = async (fileName, responce, statusCode) => {
 
 const server = http.createServer(async (request, responce) => {
     try {
-        responce.setHeader("Content-type", "text/html; charset=utf-8");
-
         if (request.url === '/') {
             await sendHtml("index", responce, 200);
         } else if (request.url === '/contact') {
