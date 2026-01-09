@@ -37,4 +37,4 @@ const server = http.createServer (async(request, responce) => {
 });
 
 server.listen(PORT);
-console.log(`Server is already run on adress http://localhost:${PORT}`)
+console.log(`Server is already run on adress http://localhost:${PORT}`);
