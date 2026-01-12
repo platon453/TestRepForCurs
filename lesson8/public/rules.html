@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Правила — Мое Облако</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            padding: 3rem;
+            border-radius: 32px;
+            width: 90%;
+            max-width: 600px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 { font-size: 2.5rem; letter-spacing: -0.02em; margin-bottom: 2rem; }
+
+        .rules-list { list-style: none; padding: 0; }
+
+        .rule-item {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+
+        .rule-num { color: var(--text-muted); font-weight: 600; font-size: 0.9rem; margin-top: 4px; }
+
+        .rule-text { font-size: 1.1rem; line-height: 1.5; }
+
+        .back-link {
+            margin-top: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .back-link:hover { color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Правила</h2>
+        <div class="rules-list">
+            <div class="rule-item">
+                <span class="rule-num">01</span>
+                <p class="rule-text">Не загружать вирусы и вредоносное ПО. Безопасность превыше всего.</p>
+            </div>
+            <div class="rule-item">
+                <span class="rule-num">02</span>
+                <p class="rule-text">Не удалять чужое. Уважайте пространство других пользователей.</p>
+            </div>
+        </div>
+        <a href="/" class="back-link">
+            <i data-lucide="chevron-left" size="18"></i>
+            На главную
+        </a>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
