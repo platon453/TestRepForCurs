@@ -1,6 +1,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path'); 
+const { url } = require('node:inspector');
 
 const PORT = 3000;
 
@@ -17,27 +18,24 @@ const MIME_TYPES = {
 const server = http.createServer((request, response) => {
     console.log(`Клиент отправил Запрос: ${request.url}`);
 
-    // let url;
-    // if (request.url === '/') {
-    //     url = "/index.html";
-    // } else if (request.url === '/video') {
-    //     url = "/video.html"
-    // } else {
-    //     url = `${request.url}.html`; // Временный костыль 
-    // }
+    let urlPath = request.url;
 
-    let url;
-    if (request.url === '/') {
-        url = "/index.html"
-    } else if (request.url === '/video') {
-        url = "/video.html";
-    } else if (request.url === '/rules') {
-       url = "/rules.html";
-    } else {
-        url = request.url;
-     }
-    
-    const filePath = path.join(__dirname, "client", url);
+    if (urlPath === '/') {
+        urlPath = '/index.html';
+    } else if (urlPath === '/video') {
+        urlPath = '/video.html';
+    } else if (urlPath === '/rules') {
+        urlPath = 'rules.html';
+    }
+    // Формируем полный путь к файлу
+    let filePath = path.join(__dirname, "client", urlPath);
+
+    if (!fs.existsSync(filePath)) { // если файла нет открываем тело
+        console.log(`Файл не найден: ${filePath}. Отдаю 404.`);
+        urlPath = '/404.html'; // меняем urlPath клиента на /404.html
+        filePath = path.join(__dirname, 'client', urlPath); // переформировываем путь
+        response.statusCode = 404;
+    }
     
     // Надо определить расширения файла (.css, .html, .tsx)
     const extname = path.extname(filePath);
