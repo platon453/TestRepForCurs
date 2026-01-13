@@ -25,8 +25,8 @@ const server = http.createServer((request, response) => {
     } else if (urlPath === '/video') {
         urlPath = '/video.html';
     } else if (urlPath === '/rules') {
-        urlPath = 'rules.html';
-    }
+        urlPath = '/rules.html';
+    };
     // Формируем полный путь к файлу
     let filePath = path.join(__dirname, "client", urlPath);
 
@@ -35,7 +35,7 @@ const server = http.createServer((request, response) => {
         urlPath = '/404.html'; // меняем urlPath клиента на /404.html
         filePath = path.join(__dirname, 'client', urlPath); // переформировываем путь
         response.statusCode = 404;
-    }
+    };
     
     // Надо определить расширения файла (.css, .html, .tsx)
     const extname = path.extname(filePath);
