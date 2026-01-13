@@ -1,7 +1,6 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path'); 
-const { url } = require('node:inspector');
 
 const PORT = 3000;
 
