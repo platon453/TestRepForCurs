@@ -37,8 +37,8 @@ const server = http.createServer(async (request, response) => {
             
         });
     } else if (request.method === 'GET' && (request.url === '/servers' || request.url === '/users')) {
-        const data = await fetch('https://gusic.xyz/stats');
-        const jsonData = await data.json(); // { servers: 123123, users:123121 }
+        const data = await fetch('https://gusic.xyz/stats'); // Получаем Response обьект
+        const jsonData = await data.json(); // Получаем сам json
 
         response.setHeader('Content-Type', 'text/html; charset=utf-8');
         response.statusCode = 200;
@@ -55,4 +55,4 @@ const server = http.createServer(async (request, response) => {
 });
 
 server.listen(PORT);
-console.log(`Server is already run on adress http://localhost:${PORT}`);
+console.log(`Server is already run on adress http://localhost:${PORT}`); 
