@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #050505;
+            --card-bg: rgba(255, 255, 255, 0.02);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #ffffff;
+            --muted: rgba(255, 255, 255, 0.4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            padding: 40px; border-radius: 32px; backdrop-filter: blur(20px);
+            width: 100%; max-width: 450px; animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .header { margin-bottom: 30px; text-align: center; }
+        .ip-badge { 
+            display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.05); 
+            border-radius: 100px; font-size: 0.8rem; color: var(--muted); margin-bottom: 12px;
+        }
+        h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.05em; margin-bottom: 5px; }
+        .location { color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 30px; }
+        .item { 
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border); 
+            padding: 20px; border-radius: 20px; transition: 0.3s;
+        }
+        .item:hover { border-color: rgba(255,255,255,0.2); }
+        .label { display: block; font-size: 0.7rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 8px; }
+        .value { font-weight: 600; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <span class="ip-badge">{{IP}}</span>
+            <h1>{{CITY}}</h1>
+            <div class="location">
+                <i data-lucide="map-pin" size="14"></i>
+                {{REGION}}, {{COUNTRY}}
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="item">
+                <span class="label">Организация</span>
+                <span class="value">{{ORG}}</span>
+            </div>
+            <div class="item">
+                <span class="label">Таймзона</span>
+                <span class="value">{{TIMEZONE}}</span>
+            </div>
+        </div>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
