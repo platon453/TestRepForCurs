@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Upload — Secure Send</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #050505;
+            --card-bg: rgba(255, 255, 255, 0.02);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #ffffff;
+            --success: #00ff88;
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0;
+        }
+
+        .container { width: 100%; max-width: 480px; padding: 20px; }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Анимация появления */
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Состояния интерфейса */
+        #uploadState, #successState { transition: 0.4s; }
+        .hidden { display: none; opacity: 0; }
+
+        h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.05em; margin-bottom: 12px; }
+        p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 30px; }
+
+        /* Стили формы */
+        .file-label {
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            padding: 40px 20px; border: 2px dashed var(--border);
+            border-radius: 24px; cursor: pointer; margin-bottom: 24px; transition: 0.3s;
+        }
+        .file-label:hover { border-color: var(--text-muted); background: rgba(255,255,255,0.02); }
+        input[type="file"] { display: none; }
+
+        .btn {
+            width: 100%; padding: 18px; border-radius: 100px; border: none;
+            background: var(--accent); color: var(--bg);
+            font-weight: 600; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,255,255,0.1); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Успех */
+        .success-icon {
+            width: 80px; height: 80px; background: rgba(0, 255, 136, 0.1);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 24px; color: var(--success);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card" id="mainCard">
+        
+        <div id="uploadState" class="fade-in">
+            <i data-lucide="upload-cloud" size="40" style="margin-bottom: 20px; opacity: 0.5;"></i>
+            <h1>Загрузка файла</h1>
+            <p>Выберите документ для безопасной передачи на сервер</p>
+            
+            <form id="uploadForm">
+                <label class="file-label">
+                    <i data-lucide="file-plus" size="24"></i>
+                    <span id="fileInfo">Нажмите, чтобы выбрать</span>
+                    <input type="file" id="filePicker" required>
+                </label>
+                <button type="submit" class="btn" id="submitBtn">
+                    Отправить файл
+                </button>
+            </form>
+        </div>
+
+        <div id="successState" class="hidden">
+            <div class="success-icon">
+                <i data-lucide="check" size="40"></i>
+            </div>
+            <h1>Готово!</h1>
+            <p>Файл успешно получен и сохранен в облаке.</p>
+            <button class="btn" onclick="location.reload()" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border);">
+                Загрузить еще один
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    const form = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('filePicker');
+    const fileInfo = document.getElementById('fileInfo');
+    const uploadState = document.getElementById('uploadState');
+    const successState = document.getElementById('successState');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Показываем имя выбранного файла
+    fileInput.onchange = () => {
+        if (fileInput.files.length > 0) {
+            fileInfo.textContent = fileInput.files[0].name;
+            fileInfo.style.color = '#00ff88';
+        }
+    };
+
+    // Перехватываем отправку формы
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Загрузка...";
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        try {
+            // Отправляем запрос на сервер БЕЗ перезагрузки
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: fileInput.files[0] // Отправляем чистый файл, как ожидает твой сервер
+            });
+
+            if (response.ok) {
+                // Плавная смена интерфейса
+                uploadState.classList.add('hidden');
+                setTimeout(() => {
+                    uploadState.style.display = 'none';
+                    successState.style.display = 'block';
+                    setTimeout(() => successState.classList.remove('hidden'), 50);
+                }, 400);
+            }
+        } catch (err) {
+            alert("Ошибка при отправке");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Попробовать снова";
+        }
+    };
+</script>
+
+</body>
+</html>
