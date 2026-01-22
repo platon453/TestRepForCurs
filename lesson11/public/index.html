@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Cloud Storage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #050505;
+            --card-bg: rgba(255, 255, 255, 0.02);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #ffffff;
+            --error: #ff4d4d;
+            --success: #00ff88;
+            --text-muted: rgba(255, 255, 255, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+            gap: 24px;
+        }
+
+        /* Общий стиль карточек */
+        .card {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1, h2 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.05em; margin-bottom: 8px; text-align: center; }
+        .subtitle { color: var(--text-muted); font-size: 0.9rem; text-align: center; margin-bottom: 30px; }
+
+        /* Кастомный ввод файла */
+        .file-input-wrapper { position: relative; margin-bottom: 20px; }
+        .file-input-wrapper input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .file-label {
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            padding: 30px; border: 2px dashed var(--border); border-radius: 20px;
+            color: var(--text-muted); transition: 0.3s;
+        }
+        .file-input-wrapper:hover .file-label { border-color: var(--accent); background: rgba(255,255,255,0.02); color: #fff; }
+
+        .file-name-preview { font-size: 0.8rem; color: var(--success); text-align: center; margin-bottom: 15px; min-height: 1.2em; }
+
+        /* Кнопки */
+        .btn {
+            width: 100%; padding: 16px; border-radius: 100px; border: none;
+            background: var(--accent); color: #000; font-weight: 700;
+            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,255,255,0.1); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Список файлов */
+        .file-list { list-style: none; margin-top: 20px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
+        .file-list::-webkit-scrollbar { width: 4px; }
+        .file-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .file-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px; border-bottom: 1px solid var(--border); transition: 0.2s;
+        }
+        .file-item:last-child { border-bottom: none; }
+        .file-item:hover { background: rgba(255, 255, 255, 0.03); border-radius: 12px; }
+
+        .file-info { display: flex; align-items: center; gap: 12px; max-width: 80%; }
+        .file-link { color: #fff; text-decoration: none; font-size: 0.9rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-link:hover { text-decoration: underline; color: var(--success); }
+
+        .btn-delete {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; padding: 8px; border-radius: 8px; transition: 0.2s;
+        }
+        .btn-delete:hover { color: var(--error); background: rgba(255, 77, 77, 0.1); }
+
+        /* Сообщения */
+        .msg { margin-top: 15px; font-size: 0.85rem; text-align: center; display: none; padding: 10px; border-radius: 10px; }
+        .msg.success { color: var(--success); background: rgba(0, 255, 136, 0.05); }
+        .msg.error { color: var(--error); background: rgba(255, 77, 77, 0.05); }
+    </style>
+</head>
+<body>
+
+    <form class="card" id="uploadForm">
+        <i data-lucide="cloud-upload" size="32" style="margin: 0 auto 16px; display: block; opacity: 0.5;"></i>
+        <h1>Загрузить</h1>
+        <p class="subtitle">Отправьте файл в хранилище</p>
+
+        <div class="file-input-wrapper">
+            <label class="file-label">
+                <i data-lucide="plus-circle" size="24"></i>
+                <span>Выберите файл</span>
+                <input type="file" name="file" required>
+            </label>
+        </div>
+
+        <div class="file-name-preview" id="fileNamePreview">Файл не выбран</div>
+
+        <button type="submit" class="btn" id="uploadBtn">
+            <i data-lucide="arrow-up-circle" size="20"></i>
+            Загрузить
+        </button>
+
+        <div class="msg success" id="successMsg">Файл успешно загружен</div>
+        <div class="msg error" id="errorMsg">Произошла ошибка при загрузке</div>
+    </form>
+
+    <div class="card">
+        <i data-lucide="folder-key" size="32" style="margin: 0 auto 16px; display: block; opacity: 0.5;"></i>
+        <h2>Ваше облако</h2>
+        <p class="subtitle" id="filesCount">Сканирование файлов...</p>
+
+        <ul class="file-list" id="fileList"></ul>
+    </div>
+
+<script>
+    // Инициализация иконок
+    lucide.createIcons();
+
+    const form = document.getElementById('uploadForm');
+    const fileInput = form.querySelector('input[type="file"]');
+    const fileNamePreview = document.getElementById('fileNamePreview');
+    const successMsg = document.getElementById('successMsg');
+    const errorMsg = document.getElementById('errorMsg');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileListEl = document.getElementById('fileList');
+    const filesCountEl = document.getElementById('filesCount');
+
+    // Предпросмотр имени файла
+    fileInput.addEventListener('change', () => {
+        fileNamePreview.textContent = fileInput.files.length ? fileInput.files[0].name : 'Файл не выбран';
+    });
+
+    // Функция загрузки списка
+    async function loadFiles() {
+        try {
+            const res = await fetch('/api/files');
+            const files = await res.json();
+
+            fileListEl.innerHTML = '';
+            filesCountEl.textContent = `Всего объектов: ${files.length}`;
+
+            if (files.length === 0) {
+                fileListEl.innerHTML = '<li style="text-align:center; padding:20px; color:rgba(255,255,255,0.2)">Пусто</li>';
+                return;
+            }
+
+            files.forEach(file => {
+                const li = document.createElement('li');
+                li.className = 'file-item';
+                li.innerHTML = `
+                    <div class="file-info">
+                        <i data-lucide="file-text" size="18" style="color:rgba(255,255,255,0.3)"></i>
+                        <a href="/uploads/${file}" class="file-link" target="_blank">${file}</a>
+                    </div>
+                    <button class="btn-delete" onclick="deleteFile('${file}')">
+                        <i data-lucide="trash-2" size="18"></i>
+                    </button>
+                `;
+                fileListEl.appendChild(li);
+            });
+            lucide.createIcons(); // Перерисовываем иконки для новых элементов
+        } catch (err) {
+            filesCountEl.textContent = 'Ошибка доступа к API';
+        }
+    }
+
+    // Удаление
+    async function deleteFile(name) {
+        if (!confirm(`Удалить ${name}?`)) return;
+        try {
+            const res = await fetch(`/api/files/${name}`, { method: 'DELETE' });
+            if (res.ok) loadFiles();
+        } catch (err) {
+            alert('Ошибка при удалении');
+        }
+    }
+
+    // Загрузка
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        successMsg.style.display = 'none';
+        errorMsg.style.display = 'none';
+
+        const formData = new FormData(form);
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = 'Загрузка...';
+
+        try {
+            // ВАЖНО: твой бэкенд ожидает либо FormData, либо чистый стрим байтов.
+            // Если ты используешь .append('file', ...), убедись, что на бэкенде есть multer или busboy.
+            const response = await fetch('/upload', { method: 'POST', body: formData });
+
+            if (response.ok) {
+                successMsg.style.display = 'block';
+                form.reset();
+                fileNamePreview.textContent = 'Файл не выбран';
+                loadFiles();
+            } else {
+                throw new Error();
+            }
+        } catch (err) {
+            errorMsg.style.display = 'block';
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i data-lucide="arrow-up-circle" size="20"></i> Загрузить';
+            lucide.createIcons();
+        }
+    });
+
+    loadFiles();
+</script>
+</body>
+</html>
