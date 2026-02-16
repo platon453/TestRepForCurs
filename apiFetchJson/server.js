@@ -85,6 +85,37 @@ const server = http.createServer(async (request, response) => {
         response.end(JSON.stringify({ token: IPINFO_TOKEN }));
     }
     
+    // API: получить использование API лимитов
+    else if (url === '/api/usage') {
+        response.setHeader('Content-Type', 'application/json; charset=utf-8');
+        response.setHeader('Access-Control-Allow-Origin', '*');
+        
+        if (!IPINFO_TOKEN) {
+            response.statusCode = 200;
+            response.end(JSON.stringify({ error: 'No token configured' }));
+            return;
+        }
+        
+        try {
+            const apiRes = await fetch('https://ipinfo.io/me', {
+                headers: { 'Authorization': `Bearer ${IPINFO_TOKEN}` }
+            });
+            const data = await apiRes.json();
+            
+            response.statusCode = 200;
+            response.end(JSON.stringify({
+                used: data.requests?.month || 0,
+                limit: data.requests?.limit || 50000,
+                remaining: data.requests?.remaining || 0,
+                day: data.requests?.day || 0
+            }));
+        } catch (error) {
+            console.error(error);
+            response.statusCode = 500;
+            response.end(JSON.stringify({ error: 'Failed to fetch usage' }));
+        }
+    }
+    
     // 404 для остальных роутов
     else {
         response.statusCode = 404;

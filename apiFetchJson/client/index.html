@@ -238,6 +238,81 @@
         }
         #map {
             height: 160px;
+        }
+
+        /* API Usage Card */
+        .usage-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-top: 16px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .usage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .usage-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .usage-title i {
+            width: 14px;
+            height: 14px;
+        }
+        .usage-stats {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+        .usage-stats span {
+            color: var(--text);
+            font-weight: 600;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--toggle-bg);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+            border-radius: 100px;
+            transition: width 0.5s ease;
+        }
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+        .progress-fill.danger {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+        .usage-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+        .usage-footer .remaining {
+            color: #22c55e;
+            font-weight: 500;
+        }
+        .usage-footer .remaining.warning {
+            color: #f59e0b;
+        }
+        .usage-footer .remaining.danger {
+            color: #ef4444;
             width: 100%;
             background: var(--bg-secondary);
         }
@@ -474,6 +549,26 @@
                 </div>
             </div>
         </div>
+
+        <!-- API Usage Card -->
+        <div class="usage-card" id="usage-card">
+            <div class="usage-header">
+                <div class="usage-title">
+                    <i data-lucide="activity"></i>
+                    API Использование
+                </div>
+                <div class="usage-stats">
+                    <span id="usage-used">—</span> / <span id="usage-limit">—</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="usage-footer">
+                <span>Запросов сегодня: <span id="usage-day">—</span></span>
+                <span class="remaining" id="usage-remaining">Осталось: —</span>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -668,8 +763,59 @@
                 
                 // Refetch data
                 fetchData(currentSource);
+                
+                // Also refresh usage
+                fetchUsage();
             }
         });
+
+        // Fetch API usage
+        async function fetchUsage() {
+            try {
+                const res = await fetch('/api/usage');
+                const data = await res.json();
+                
+                if (data.error) {
+                    document.getElementById('usage-card').style.display = 'none';
+                    return;
+                }
+                
+                const used = data.used;
+                const limit = data.limit;
+                const remaining = data.remaining;
+                const day = data.day;
+                const percentage = (used / limit) * 100;
+                
+                // Update UI
+                document.getElementById('usage-used').textContent = used.toLocaleString();
+                document.getElementById('usage-limit').textContent = limit.toLocaleString();
+                document.getElementById('usage-day').textContent = day.toLocaleString();
+                document.getElementById('usage-remaining').textContent = `Осталось: ${remaining.toLocaleString()}`;
+                
+                // Update progress bar
+                const progressFill = document.getElementById('progress-fill');
+                progressFill.style.width = `${Math.min(percentage, 100)}%`;
+                
+                // Update colors based on usage
+                const remainingEl = document.getElementById('usage-remaining');
+                progressFill.classList.remove('warning', 'danger');
+                remainingEl.classList.remove('warning', 'danger');
+                
+                if (percentage >= 90) {
+                    progressFill.classList.add('danger');
+                    remainingEl.classList.add('danger');
+                } else if (percentage >= 70) {
+                    progressFill.classList.add('warning');
+                    remainingEl.classList.add('warning');
+                }
+                
+            } catch (err) {
+                console.error('Failed to fetch usage:', err);
+            }
+        }
+
+        // Load usage on page load
+        fetchUsage();
     </script>
 </body>
 </html>
