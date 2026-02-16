@@ -6,6 +6,9 @@
     <title>Network Intelligence</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Leaflet CSS & JS для карты -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
             --bg: #050505;
@@ -15,26 +18,187 @@
             --muted: rgba(255, 255, 255, 0.4);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* Анимированный градиентный фон */
         body { 
-            background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; 
-            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            background: linear-gradient(-45deg, #0f0f1a, #1a0a2e, #0a1628, #051010);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            color: #fff; 
+            font-family: 'Inter', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            padding: 20px;
         }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
         .card {
             background: var(--card-bg); border: 1px solid var(--border);
             padding: 40px; border-radius: 32px; backdrop-filter: blur(20px);
-            width: 100%; max-width: 450px; animation: fadeIn 0.8s ease-out;
+            width: 100%; max-width: 480px; animation: fadeIn 0.8s ease-out;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .header { margin-bottom: 30px; text-align: center; }
-        .ip-badge { 
-            display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.05); 
-            border-radius: 100px; font-size: 0.8rem; color: var(--muted); margin-bottom: 12px;
+        /* Toggle переключатель */
+        .toggle-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
         }
-        h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.05em; margin-bottom: 5px; }
-        .location { color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 100px;
+            padding: 4px;
+            border: 1px solid var(--border);
+        }
+        .toggle-btn {
+            padding: 10px 20px;
+            border-radius: 100px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toggle-btn:hover {
+            color: #fff;
+        }
+        .toggle-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .toggle-btn i {
+            width: 16px;
+            height: 16px;
+        }
 
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 30px; }
+        /* Экран выбора */
+        .choose-screen {
+            text-align: center;
+            padding: 40px 0;
+        }
+        .choose-screen h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .choose-screen p {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        .choose-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+
+        /* Loading состояние */
+        .loading-screen {
+            text-align: center;
+            padding: 60px 0;
+            display: none;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-screen p {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* Контент с данными */
+        .content {
+            display: none;
+        }
+        .content.visible {
+            display: block;
+        }
+
+        .header { margin-bottom: 30px; text-align: center; }
+        
+        /* IP бейдж с кнопкой копирования */
+        .ip-badge { 
+            display: inline-flex; 
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px; 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 100px; 
+            font-size: 0.8rem; 
+            color: var(--muted); 
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        .ip-badge:hover { 
+            background: rgba(255,255,255,0.1); 
+            border-color: rgba(255,255,255,0.2);
+        }
+        .ip-badge .copy-icon { 
+            width: 14px; 
+            height: 14px; 
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+        .ip-badge:hover .copy-icon { opacity: 1; }
+        .ip-badge.copied { 
+            background: rgba(34, 197, 94, 0.2); 
+            color: #22c55e;
+        }
+        
+        h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.05em; margin-bottom: 5px; }
+        
+        /* Локация с флагом */
+        .location { 
+            color: var(--muted); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 6px; 
+        }
+        .flag { 
+            font-size: 1.2rem; 
+            margin-right: 4px;
+        }
+
+        /* Карта */
+        .map-container {
+            margin-top: 24px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        #map { 
+            height: 180px; 
+            width: 100%;
+            filter: saturate(0.8) brightness(0.9);
+        }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
         .item { 
             background: rgba(255,255,255,0.02); border: 1px solid var(--border); 
             padding: 20px; border-radius: 20px; transition: 0.3s;
@@ -42,30 +206,257 @@
         .item:hover { border-color: rgba(255,255,255,0.2); }
         .label { display: block; font-size: 0.7rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 8px; }
         .value { font-weight: 600; font-size: 0.95rem; }
+        
+        /* Leaflet overrides для тёмной темы */
+        .leaflet-control-attribution { display: none; }
+        .leaflet-control-zoom { border: none !important; }
+        .leaflet-control-zoom a { 
+            background: rgba(0,0,0,0.6) !important; 
+            color: #fff !important;
+            border: none !important;
+        }
+
+        /* Ошибка */
+        .error-screen {
+            text-align: center;
+            padding: 40px 0;
+            display: none;
+        }
+        .error-screen .error-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        .error-screen h3 {
+            color: #ef4444;
+            margin-bottom: 10px;
+        }
+        .error-screen p {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="header">
-            <span class="ip-badge">{{IP}}</span>
-            <h1>{{CITY}}</h1>
-            <div class="location">
-                <i data-lucide="map-pin" size="14"></i>
-                {{REGION}}, {{COUNTRY}}
+        <!-- Toggle переключатель -->
+        <div class="toggle-container">
+            <div class="toggle">
+                <button class="toggle-btn" id="btn-browser" onclick="loadData('browser')">
+                    <i data-lucide="globe"></i>
+                    Браузер
+                </button>
+                <button class="toggle-btn" id="btn-server" onclick="loadData('server')">
+                    <i data-lucide="server"></i>
+                    Сервер
+                </button>
             </div>
         </div>
 
-        <div class="grid">
-            <div class="item">
-                <span class="label">Организация</span>
-                <span class="value">{{ORG}}</span>
+        <!-- Экран выбора (по умолчанию) -->
+        <div class="choose-screen" id="choose-screen">
+            <div class="choose-icon">🔍</div>
+            <h2>Выберите источник</h2>
+            <p>Браузер — ваш IP (учитывает прокси/VPN)<br>Сервер — IP машины где запущен сервер</p>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading-screen" id="loading-screen">
+            <div class="spinner"></div>
+            <p>Загрузка данных...</p>
+        </div>
+
+        <!-- Ошибка -->
+        <div class="error-screen" id="error-screen">
+            <div class="error-icon">⚠️</div>
+            <h3>Ошибка загрузки</h3>
+            <p id="error-message">Не удалось получить данные</p>
+        </div>
+
+        <!-- Контент с данными -->
+        <div class="content" id="content">
+            <div class="header">
+                <span class="ip-badge" onclick="copyIP()" id="ip-badge">
+                    <span id="ip-text">—</span>
+                    <i data-lucide="copy" class="copy-icon"></i>
+                </span>
+                <h1 id="city">—</h1>
+                <div class="location">
+                    <i data-lucide="map-pin" style="width:14px;height:14px;"></i>
+                    <span class="flag" id="country-flag"></span>
+                    <span id="region-country">—</span>
+                </div>
             </div>
-            <div class="item">
-                <span class="label">Таймзона</span>
-                <span class="value">{{TIMEZONE}}</span>
+
+            <!-- Интерактивная карта -->
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+
+            <div class="grid">
+                <div class="item">
+                    <span class="label">Организация</span>
+                    <span class="value" id="org">—</span>
+                </div>
+                <div class="item">
+                    <span class="label">Таймзона</span>
+                    <span class="value" id="timezone">—</span>
+                </div>
             </div>
         </div>
     </div>
-    <script>lucide.createIcons();</script>
+
+    <script>
+        // Инициализация Lucide иконок
+        lucide.createIcons();
+
+        // Глобальные переменные
+        let map = null;
+        let marker = null;
+        let currentSource = null;
+
+        /**
+         * Функция для получения emoji флага по коду страны
+         */
+        function getCountryFlag(code) {
+            if (!code || code === 'XX') return '🌍';
+            const codePoints = code
+                .toUpperCase()
+                .split('')
+                .map(char => 127397 + char.charCodeAt(0));
+            return String.fromCodePoint(...codePoints);
+        }
+
+        /**
+         * Показывает определённый экран
+         */
+        function showScreen(screenId) {
+            const screens = ['choose-screen', 'loading-screen', 'error-screen', 'content'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (id === 'content') {
+                    el.classList.toggle('visible', id === screenId);
+                } else {
+                    el.style.display = id === screenId ? 'block' : 'none';
+                }
+            });
+        }
+
+        /**
+         * Обновляет UI с данными
+         */
+        function updateUI(data) {
+            document.getElementById('ip-text').textContent = data.ip;
+            document.getElementById('city').textContent = data.city;
+            document.getElementById('region-country').textContent = `${data.region}, ${data.country}`;
+            document.getElementById('country-flag').textContent = getCountryFlag(data.country);
+            document.getElementById('org').textContent = data.org;
+            document.getElementById('timezone').textContent = data.timezone;
+
+            // Инициализация или обновление карты
+            const lat = data.lat;
+            const lon = data.lon;
+
+            if (!map) {
+                map = L.map('map', {
+                    zoomControl: true,
+                    scrollWheelZoom: false
+                }).setView([lat, lon], 10);
+
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 19
+                }).addTo(map);
+
+                marker = L.circleMarker([lat, lon], {
+                    radius: 8,
+                    fillColor: "#3b82f6",
+                    color: "#fff",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+            } else {
+                map.setView([lat, lon], 10);
+                marker.setLatLng([lat, lon]);
+            }
+
+            // Фикс рендера карты после показа
+            setTimeout(() => map.invalidateSize(), 100);
+        }
+
+        /**
+         * Загружает данные с выбранного источника
+         */
+        async function loadData(source) {
+            // Обновляем toggle кнопки
+            document.getElementById('btn-browser').classList.toggle('active', source === 'browser');
+            document.getElementById('btn-server').classList.toggle('active', source === 'server');
+            
+            currentSource = source;
+            showScreen('loading-screen');
+
+            try {
+                let data;
+
+                if (source === 'browser') {
+                    // Запрос напрямую к ipinfo.io из браузера
+                    const res = await fetch('https://ipinfo.io/json');
+                    const raw = await res.json();
+                    
+                    // Форматируем данные как на сервере
+                    const [lat, lon] = raw.loc ? raw.loc.split(',') : ['0', '0'];
+                    data = {
+                        ip: raw.ip || 'N/A',
+                        city: raw.city || 'Unknown',
+                        region: raw.region || 'Unknown',
+                        country: raw.country || 'XX',
+                        org: raw.org ? raw.org.split(' ').slice(1).join(' ') : 'Unknown',
+                        timezone: raw.timezone || 'UTC',
+                        lat: parseFloat(lat),
+                        lon: parseFloat(lon)
+                    };
+                } else {
+                    // Запрос к нашему серверу
+                    const res = await fetch('/api/serverip');
+                    data = await res.json();
+                    
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                }
+
+                updateUI(data);
+                showScreen('content');
+                lucide.createIcons();
+
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                document.getElementById('error-message').textContent = error.message || 'Не удалось получить данные';
+                showScreen('error-screen');
+            }
+        }
+
+        /**
+         * Функция копирования IP
+         */
+        function copyIP() {
+            const ipText = document.getElementById('ip-text').textContent;
+            if (ipText === '—') return;
+            
+            navigator.clipboard.writeText(ipText).then(() => {
+                const badge = document.getElementById('ip-badge');
+                badge.classList.add('copied');
+                
+                const originalHTML = badge.innerHTML;
+                badge.innerHTML = '<span>Скопировано!</span> <i data-lucide="check" class="copy-icon"></i>';
+                lucide.createIcons();
+                
+                setTimeout(() => {
+                    badge.innerHTML = originalHTML;
+                    badge.classList.remove('copied');
+                    lucide.createIcons();
+                }, 1500);
+            });
+        }
+    </script>
 </body>
 </html>
