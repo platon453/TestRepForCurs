@@ -66,8 +66,12 @@
             padding: 0 4px;
         }
 
-        /* Theme Toggle */
-        .theme-toggle {
+        /* Control Buttons */
+        .control-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .control-btn {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -80,18 +84,30 @@
             transition: all 0.2s ease;
             color: var(--text);
         }
-        .theme-toggle:hover {
+        .control-btn:hover {
             background: var(--hover);
             border-color: var(--muted);
         }
-        .theme-toggle i {
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        .control-btn i {
             width: 20px;
             height: 20px;
         }
-        .theme-toggle .icon-sun { display: none; }
-        .theme-toggle .icon-moon { display: block; }
-        [data-theme="light"] .theme-toggle .icon-sun { display: block; }
-        [data-theme="light"] .theme-toggle .icon-moon { display: none; }
+        .control-btn .icon-sun { display: none; }
+        .control-btn .icon-moon { display: block; }
+        [data-theme="light"] .control-btn .icon-sun { display: block; }
+        [data-theme="light"] .control-btn .icon-moon { display: none; }
+        
+        /* Refresh spin animation */
+        .control-btn.spinning i {
+            animation: spin 0.8s ease-in-out;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
 
         /* iOS-style Toggle Slider */
         .toggle-slider {
@@ -379,11 +395,16 @@
                 </label>
             </div>
 
-            <!-- Theme Toggle -->
-            <button class="theme-toggle" id="theme-toggle" title="Переключить тему">
-                <i data-lucide="moon" class="icon-moon"></i>
-                <i data-lucide="sun" class="icon-sun"></i>
-            </button>
+            <!-- Control Buttons -->
+            <div class="control-buttons">
+                <button class="control-btn" id="refresh-btn" title="Обновить данные">
+                    <i data-lucide="refresh-cw"></i>
+                </button>
+                <button class="control-btn" id="theme-toggle" title="Переключить тему">
+                    <i data-lucide="moon" class="icon-moon"></i>
+                    <i data-lucide="sun" class="icon-sun"></i>
+                </button>
+            </div>
         </div>
 
         <div class="card">
@@ -465,6 +486,7 @@
         const optBrowser = document.getElementById('opt-browser');
         const optServer = document.getElementById('opt-server');
         const themeToggle = document.getElementById('theme-toggle');
+        const refreshBtn = document.getElementById('refresh-btn');
         const chooseScreen = document.getElementById('choose-screen');
         const loadingScreen = document.getElementById('loading-screen');
         const errorScreen = document.getElementById('error-screen');
@@ -475,6 +497,13 @@
         let marker = null;
         let currentSource = null;
         let currentTheme = localStorage.getItem('theme') || 'dark';
+        let apiToken = null;
+
+        // Загружаем токен с сервера при старте
+        fetch('/api/token')
+            .then(res => res.json())
+            .then(data => { apiToken = data.token; })
+            .catch(() => { console.warn('Token not available'); });
 
         // Apply saved theme
         if (currentTheme === 'light') {
@@ -569,7 +598,10 @@
             try {
                 let data;
                 if (source === 'browser') {
-                    const res = await fetch('https://ipinfo.io/json');
+                    const fetchOptions = apiToken 
+                        ? { headers: { 'Authorization': `Bearer ${apiToken}` } }
+                        : {};
+                    const res = await fetch('https://ipinfo.io/json', fetchOptions);
                     const raw = await res.json();
                     const [lat, lon] = raw.loc ? raw.loc.split(',') : ['0', '0'];
                     data = {
@@ -624,6 +656,18 @@
                 await navigator.clipboard.writeText(ip);
                 ipBadge.classList.add('copied');
                 setTimeout(() => ipBadge.classList.remove('copied'), 1500);
+            }
+        });
+
+        // Refresh data
+        refreshBtn.addEventListener('click', () => {
+            if (currentSource) {
+                // Add spinning animation
+                refreshBtn.classList.add('spinning');
+                setTimeout(() => refreshBtn.classList.remove('spinning'), 800);
+                
+                // Refetch data
+                fetchData(currentSource);
             }
         });
     </script>

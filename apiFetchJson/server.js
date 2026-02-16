@@ -2,7 +2,20 @@ const http = require('node:http');
 const path = require('node:path');
 const fs = require('node:fs/promises');
 
+// Загрузка переменных окружения из .env
+const envPath = path.join(__dirname, '.env');
+try {
+    const envContent = require('fs').readFileSync(envPath, 'utf-8');
+    envContent.split('\n').forEach(line => {
+        const [key, value] = line.split('=');
+        if (key && value) process.env[key.trim()] = value.trim();
+    });
+} catch (e) {
+    console.warn('⚠️  .env файл не найден, токен ipinfo.io не будет использован');
+}
+
 const PORT = 3000;
+const IPINFO_TOKEN = process.env.IPINFO_TOKEN || null;
 
 /**
  * Форматирует данные IP в единый формат
@@ -45,7 +58,10 @@ const server = http.createServer(async (request, response) => {
     // API: получить IP сервера
     else if (url === '/api/serverip') {
         try {
-            const apiRes = await fetch('https://ipinfo.io/json');
+            const fetchOptions = IPINFO_TOKEN 
+                ? { headers: { 'Authorization': `Bearer ${IPINFO_TOKEN}` } }
+                : {};
+            const apiRes = await fetch('https://ipinfo.io/json', fetchOptions);
             const data = await apiRes.json();
             const formatted = formatIpData(data);
             
@@ -59,6 +75,14 @@ const server = http.createServer(async (request, response) => {
             response.setHeader('Content-Type', 'application/json');
             response.end(JSON.stringify({ error: 'Ошибка при получении данных' }));
         }
+    }
+    
+    // API: получить токен для фронтенда (опционально)
+    else if (url === '/api/token') {
+        response.setHeader('Content-Type', 'application/json; charset=utf-8');
+        response.setHeader('Access-Control-Allow-Origin', '*');
+        response.statusCode = 200;
+        response.end(JSON.stringify({ token: IPINFO_TOKEN }));
     }
     
     // 404 для остальных роутов
