@@ -116,6 +116,27 @@ const server = http.createServer(async (request, response) => {
         }
     }
     
+    // Статические файлы (CSS, JS)
+    else if (url.startsWith('/css/') || url.startsWith('/js/')) {
+        try {
+            const filePath = path.join(__dirname, 'client', url);
+            const content = await fs.readFile(filePath, 'utf-8');
+            
+            const ext = path.extname(url);
+            const contentTypes = {
+                '.css': 'text/css',
+                '.js': 'application/javascript'
+            };
+            
+            response.setHeader('Content-Type', `${contentTypes[ext] || 'text/plain'}; charset=utf-8`);
+            response.statusCode = 200;
+            response.end(content);
+        } catch (error) {
+            response.statusCode = 404;
+            response.end('File Not Found');
+        }
+    }
+    
     // 404 для остальных роутов
     else {
         response.statusCode = 404;
