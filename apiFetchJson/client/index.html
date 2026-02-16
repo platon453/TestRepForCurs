@@ -4,27 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Network Intelligence</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         :root {
             --bg: #050505;
+            --bg-secondary: #0a0a0a;
             --card-bg: rgba(255, 255, 255, 0.02);
             --border: rgba(255, 255, 255, 0.08);
             --accent: #ffffff;
+            --text: #ffffff;
             --muted: rgba(255, 255, 255, 0.4);
+            --hover: rgba(255, 255, 255, 0.05);
+            --toggle-bg: rgba(255, 255, 255, 0.05);
+            --toggle-active: #ffffff;
+            --toggle-active-text: #000000;
+            --map-tiles: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
         }
+
+        [data-theme="light"] {
+            --bg: #f5f5f7;
+            --bg-secondary: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --border: rgba(0, 0, 0, 0.08);
+            --accent: #000000;
+            --text: #1d1d1f;
+            --muted: rgba(0, 0, 0, 0.45);
+            --hover: rgba(0, 0, 0, 0.03);
+            --toggle-bg: rgba(0, 0, 0, 0.05);
+            --toggle-active: #000000;
+            --toggle-active-text: #ffffff;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body { 
             background: var(--bg); 
-            color: #fff; 
-            font-family: 'Inter', sans-serif; 
+            color: var(--text); 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .container {
@@ -32,28 +57,59 @@
             max-width: 480px;
         }
 
-        /* iOS-style Toggle Slider */
-        .toggle-wrapper {
+        /* Header Controls */
+        .header-controls {
             display: flex;
-            justify-content: center;
-            margin-bottom: 24px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 4px;
         }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text);
+        }
+        .theme-toggle:hover {
+            background: var(--hover);
+            border-color: var(--muted);
+        }
+        .theme-toggle i {
+            width: 20px;
+            height: 20px;
+        }
+        .theme-toggle .icon-sun { display: none; }
+        .theme-toggle .icon-moon { display: block; }
+        [data-theme="light"] .theme-toggle .icon-sun { display: block; }
+        [data-theme="light"] .theme-toggle .icon-moon { display: none; }
+
+        /* iOS-style Toggle Slider */
         .toggle-slider {
             position: relative;
             display: flex;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--toggle-bg);
             border: 1px solid var(--border);
             border-radius: 100px;
             padding: 4px;
             gap: 4px;
         }
-        .toggle-slider input {
-            display: none;
-        }
         .toggle-option {
             position: relative;
             z-index: 1;
-            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
             font-size: 0.85rem;
             font-weight: 500;
             color: var(--muted);
@@ -61,8 +117,12 @@
             transition: color 0.3s ease;
             user-select: none;
         }
+        .toggle-option i {
+            width: 16px;
+            height: 16px;
+        }
         .toggle-option.active {
-            color: #000;
+            color: var(--toggle-active-text);
         }
         .toggle-bg {
             position: absolute;
@@ -70,7 +130,7 @@
             left: 4px;
             height: calc(100% - 8px);
             width: calc(50% - 6px);
-            background: #fff;
+            background: var(--toggle-active);
             border-radius: 100px;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -82,10 +142,12 @@
         .card {
             background: var(--card-bg); 
             border: 1px solid var(--border);
-            padding: 40px; 
-            border-radius: 32px; 
+            padding: 32px; 
+            border-radius: 24px; 
             backdrop-filter: blur(20px);
-            animation: fadeIn 0.8s ease-out;
+            -webkit-backdrop-filter: blur(20px);
+            animation: fadeIn 0.6s ease-out;
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
         @keyframes fadeIn { 
             from { opacity: 0; transform: translateY(10px); } 
@@ -94,7 +156,7 @@
 
         /* Header */
         .header { 
-            margin-bottom: 24px; 
+            margin-bottom: 20px; 
             text-align: center; 
         }
         .ip-badge { 
@@ -102,34 +164,37 @@
             align-items: center;
             gap: 8px;
             padding: 8px 16px; 
-            background: rgba(255,255,255,0.05); 
+            background: var(--toggle-bg); 
             border: 1px solid var(--border);
             border-radius: 100px; 
             font-size: 0.85rem; 
-            color: var(--accent); 
+            font-weight: 500;
+            color: var(--text); 
             margin-bottom: 16px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
         .ip-badge:hover {
-            background: rgba(255,255,255,0.1);
+            background: var(--hover);
+            border-color: var(--muted);
         }
         .ip-badge:active {
             transform: scale(0.98);
         }
-        .ip-badge .copy-icon {
+        .ip-badge i {
             width: 14px;
             height: 14px;
             opacity: 0.5;
         }
         .ip-badge.copied {
-            background: rgba(34, 197, 94, 0.2);
+            background: rgba(34, 197, 94, 0.15);
             border-color: rgba(34, 197, 94, 0.3);
+            color: #22c55e;
         }
         h1 { 
-            font-size: 2.4rem; 
+            font-size: 2.2rem; 
             font-weight: 800; 
-            letter-spacing: -0.05em; 
+            letter-spacing: -0.04em; 
             margin-bottom: 8px; 
         }
         .location { 
@@ -140,75 +205,98 @@
             gap: 8px;
             font-size: 0.95rem;
         }
+        .location i {
+            width: 16px;
+            height: 16px;
+        }
         .flag {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
 
         /* Map */
         .map-container {
-            margin: 24px 0;
-            border-radius: 20px;
+            margin: 20px 0;
+            border-radius: 16px;
             overflow: hidden;
             border: 1px solid var(--border);
         }
         #map {
-            height: 180px;
+            height: 160px;
             width: 100%;
-            background: #111;
+            background: var(--bg-secondary);
         }
 
         /* Grid */
         .grid { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
-            gap: 12px; 
+            gap: 10px; 
         }
         .item { 
-            background: rgba(255,255,255,0.02); 
+            background: var(--hover); 
             border: 1px solid var(--border); 
-            padding: 16px; 
-            border-radius: 16px; 
-            transition: border-color 0.3s ease;
+            padding: 14px; 
+            border-radius: 14px; 
+            transition: border-color 0.2s ease;
         }
         .item:hover { 
-            border-color: rgba(255,255,255,0.15); 
+            border-color: var(--muted); 
         }
         .item.full-width {
             grid-column: 1 / -1;
         }
         .label { 
-            display: block; 
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-size: 0.65rem; 
             text-transform: uppercase; 
             color: var(--muted); 
-            letter-spacing: 0.1em; 
+            letter-spacing: 0.08em; 
             margin-bottom: 6px; 
+        }
+        .label i {
+            width: 12px;
+            height: 12px;
         }
         .value { 
             font-weight: 600; 
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             word-break: break-all;
+            color: var(--text);
         }
 
         /* Choose Screen */
         .choose-screen {
             text-align: center;
-            padding: 60px 20px;
+            padding: 50px 20px;
+        }
+        .choose-screen .choose-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: var(--toggle-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+        .choose-screen .choose-icon i {
+            width: 28px;
+            height: 28px;
+            color: var(--muted);
         }
         .choose-screen h2 {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            margin-bottom: 12px;
-            letter-spacing: -0.03em;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
         }
         .choose-screen p {
             color: var(--muted);
             font-size: 0.9rem;
-        }
-        .choose-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            opacity: 0.8;
+            line-height: 1.5;
         }
 
         /* Loading */
@@ -217,16 +305,16 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 80px 20px;
+            padding: 70px 20px;
             gap: 16px;
         }
         .spinner {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             border: 2px solid var(--border);
             border-top-color: var(--accent);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin 0.7s linear infinite;
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -239,7 +327,23 @@
         /* Error */
         .error-screen {
             text-align: center;
-            padding: 60px 20px;
+            padding: 50px 20px;
+        }
+        .error-screen .error-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 16px;
+        }
+        .error-screen .error-icon i {
+            width: 28px;
+            height: 28px;
+            color: #ef4444;
         }
         .error-screen p {
             color: #ef4444;
@@ -260,23 +364,34 @@
 </head>
 <body>
     <div class="container">
-        <!-- Toggle Slider -->
-        <div class="toggle-wrapper">
+        <!-- Header Controls -->
+        <div class="header-controls">
+            <!-- Source Toggle -->
             <div class="toggle-slider" id="toggle">
                 <div class="toggle-bg"></div>
                 <label class="toggle-option active" data-source="browser" id="opt-browser">
-                    🌐 Браузер
+                    <i data-lucide="globe"></i>
+                    Браузер
                 </label>
                 <label class="toggle-option" data-source="server" id="opt-server">
-                    🖥️ Сервер
+                    <i data-lucide="server"></i>
+                    Сервер
                 </label>
             </div>
+
+            <!-- Theme Toggle -->
+            <button class="theme-toggle" id="theme-toggle" title="Переключить тему">
+                <i data-lucide="moon" class="icon-moon"></i>
+                <i data-lucide="sun" class="icon-sun"></i>
+            </button>
         </div>
 
         <div class="card">
             <!-- Choose Screen (default) -->
             <div class="choose-screen" id="choose-screen">
-                <div class="choose-icon">👆</div>
+                <div class="choose-icon">
+                    <i data-lucide="mouse-pointer-click"></i>
+                </div>
                 <h2>Выбери источник</h2>
                 <p>Браузер покажет твой IP (с учётом VPN/прокси)<br>Сервер покажет IP машины</p>
             </div>
@@ -289,6 +404,9 @@
 
             <!-- Error Screen -->
             <div class="error-screen hidden" id="error-screen">
+                <div class="error-icon">
+                    <i data-lucide="alert-triangle"></i>
+                </div>
                 <p id="error-message">Ошибка при загрузке</p>
             </div>
 
@@ -297,13 +415,11 @@
                 <div class="header">
                     <div class="ip-badge" id="ip-badge" title="Нажми чтобы скопировать">
                         <span id="ip-text">—</span>
-                        <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                        </svg>
+                        <i data-lucide="copy"></i>
                     </div>
                     <h1 id="city">—</h1>
                     <div class="location">
+                        <i data-lucide="map-pin"></i>
                         <span class="flag" id="flag">🏳️</span>
                         <span id="region-country">—</span>
                     </div>
@@ -315,23 +431,23 @@
 
                 <div class="grid">
                     <div class="item">
-                        <span class="label">Организация</span>
+                        <span class="label"><i data-lucide="building-2"></i> Организация</span>
                         <span class="value" id="org">—</span>
                     </div>
                     <div class="item">
-                        <span class="label">Таймзона</span>
+                        <span class="label"><i data-lucide="clock"></i> Таймзона</span>
                         <span class="value" id="timezone">—</span>
                     </div>
                     <div class="item">
-                        <span class="label">Почтовый индекс</span>
+                        <span class="label"><i data-lucide="mail"></i> Почтовый индекс</span>
                         <span class="value" id="postal">—</span>
                     </div>
                     <div class="item">
-                        <span class="label">Координаты</span>
+                        <span class="label"><i data-lucide="navigation"></i> Координаты</span>
                         <span class="value" id="coords">—</span>
                     </div>
                     <div class="item full-width">
-                        <span class="label">Hostname</span>
+                        <span class="label"><i data-lucide="at-sign"></i> Hostname</span>
                         <span class="value" id="hostname">—</span>
                     </div>
                 </div>
@@ -340,10 +456,15 @@
     </div>
 
     <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
         // Elements
+        const html = document.documentElement;
         const toggle = document.getElementById('toggle');
         const optBrowser = document.getElementById('opt-browser');
         const optServer = document.getElementById('opt-server');
+        const themeToggle = document.getElementById('theme-toggle');
         const chooseScreen = document.getElementById('choose-screen');
         const loadingScreen = document.getElementById('loading-screen');
         const errorScreen = document.getElementById('error-screen');
@@ -353,6 +474,43 @@
         let map = null;
         let marker = null;
         let currentSource = null;
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+
+        // Apply saved theme
+        if (currentTheme === 'light') {
+            html.setAttribute('data-theme', 'light');
+        }
+
+        // Theme toggle
+        themeToggle.addEventListener('click', () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            if (currentTheme === 'light') {
+                html.setAttribute('data-theme', 'light');
+            } else {
+                html.removeAttribute('data-theme');
+            }
+            localStorage.setItem('theme', currentTheme);
+            
+            // Update map tiles if map exists
+            if (map) {
+                updateMapTiles();
+            }
+        });
+
+        // Map tiles based on theme
+        function getMapTiles() {
+            return currentTheme === 'light' 
+                ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+        }
+
+        let tileLayer = null;
+        function updateMapTiles() {
+            if (tileLayer) {
+                map.removeLayer(tileLayer);
+            }
+            tileLayer = L.tileLayer(getMapTiles(), { maxZoom: 19 }).addTo(map);
+        }
 
         // Country code to flag emoji
         function getFlag(countryCode) {
@@ -391,9 +549,7 @@
             if (!map) {
                 map = L.map('map', { zoomControl: false, attributionControl: false })
                     .setView([data.lat, data.lon], 10);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    maxZoom: 19
-                }).addTo(map);
+                tileLayer = L.tileLayer(getMapTiles(), { maxZoom: 19 }).addTo(map);
                 marker = L.marker([data.lat, data.lon]).addTo(map);
             } else {
                 map.setView([data.lat, data.lon], 10);
