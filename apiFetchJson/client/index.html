@@ -57,7 +57,6 @@
             max-width: 480px;
         }
 
-        /* Header Controls */
         .header-controls {
             display: flex;
             justify-content: space-between;
@@ -66,7 +65,6 @@
             padding: 0 4px;
         }
 
-        /* Control Buttons */
         .control-buttons {
             display: flex;
             gap: 8px;
@@ -100,7 +98,6 @@
         [data-theme="light"] .control-btn .icon-sun { display: block; }
         [data-theme="light"] .control-btn .icon-moon { display: none; }
         
-        /* Refresh spin animation */
         .control-btn.spinning i {
             animation: spin 0.8s ease-in-out;
         }
@@ -109,7 +106,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* iOS-style Toggle Slider */
         .toggle-slider {
             position: relative;
             display: flex;
@@ -154,7 +150,6 @@
             transform: translateX(calc(100% + 4px));
         }
 
-        /* Card */
         .card {
             background: var(--card-bg); 
             border: 1px solid var(--border);
@@ -170,7 +165,6 @@
             to { opacity: 1; transform: translateY(0); } 
         }
 
-        /* Header */
         .header { 
             margin-bottom: 20px; 
             text-align: center; 
@@ -229,7 +223,6 @@
             font-size: 1.1rem;
         }
 
-        /* Map */
         .map-container {
             margin: 20px 0;
             border-radius: 16px;
@@ -240,7 +233,6 @@
             height: 160px;
         }
 
-        /* API Usage Card */
         .usage-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -317,7 +309,6 @@
             background: var(--bg-secondary);
         }
 
-        /* Grid */
         .grid { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
@@ -357,7 +348,6 @@
             color: var(--text);
         }
 
-        /* Choose Screen */
         .choose-screen {
             text-align: center;
             padding: 50px 20px;
@@ -390,7 +380,6 @@
             line-height: 1.5;
         }
 
-        /* Loading */
         .loading-screen {
             display: flex;
             flex-direction: column;
@@ -415,7 +404,6 @@
             font-size: 0.85rem;
         }
 
-        /* Error */
         .error-screen {
             text-align: center;
             padding: 50px 20px;
@@ -441,7 +429,6 @@
             font-size: 0.9rem;
         }
 
-        /* Data Screen */
         .data-screen {
             display: none;
         }
@@ -449,15 +436,12 @@
             display: block;
         }
 
-        /* Hidden */
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header Controls -->
         <div class="header-controls">
-            <!-- Source Toggle -->
             <div class="toggle-slider" id="toggle">
                 <div class="toggle-bg"></div>
                 <label class="toggle-option active" data-source="browser" id="opt-browser">
@@ -470,7 +454,6 @@
                 </label>
             </div>
 
-            <!-- Control Buttons -->
             <div class="control-buttons">
                 <button class="control-btn" id="refresh-btn" title="Обновить данные">
                     <i data-lucide="refresh-cw"></i>
@@ -483,7 +466,6 @@
         </div>
 
         <div class="card">
-            <!-- Choose Screen (default) -->
             <div class="choose-screen" id="choose-screen">
                 <div class="choose-icon">
                     <i data-lucide="mouse-pointer-click"></i>
@@ -492,13 +474,11 @@
                 <p>Браузер покажет твой IP (с учётом VPN/прокси)<br>Сервер покажет IP машины</p>
             </div>
 
-            <!-- Loading Screen -->
             <div class="loading-screen hidden" id="loading-screen">
                 <div class="spinner"></div>
                 <p>Загрузка данных...</p>
             </div>
 
-            <!-- Error Screen -->
             <div class="error-screen hidden" id="error-screen">
                 <div class="error-icon">
                     <i data-lucide="alert-triangle"></i>
@@ -506,7 +486,6 @@
                 <p id="error-message">Ошибка при загрузке</p>
             </div>
 
-            <!-- Data Screen -->
             <div class="data-screen" id="data-screen">
                 <div class="header">
                     <div class="ip-badge" id="ip-badge" title="Нажми чтобы скопировать">
@@ -550,7 +529,6 @@
             </div>
         </div>
 
-        <!-- API Usage Card -->
         <div class="usage-card" id="usage-card">
             <div class="usage-header">
                 <div class="usage-title">
@@ -572,10 +550,8 @@
     </div>
 
     <script>
-        // Initialize Lucide icons
         lucide.createIcons();
 
-        // Elements
         const html = document.documentElement;
         const toggle = document.getElementById('toggle');
         const optBrowser = document.getElementById('opt-browser');
@@ -594,18 +570,15 @@
         let currentTheme = localStorage.getItem('theme') || 'dark';
         let apiToken = null;
 
-        // Загружаем токен с сервера при старте
         fetch('/api/token')
             .then(res => res.json())
             .then(data => { apiToken = data.token; })
             .catch(() => { console.warn('Token not available'); });
 
-        // Apply saved theme
         if (currentTheme === 'light') {
             html.setAttribute('data-theme', 'light');
         }
 
-        // Theme toggle
         themeToggle.addEventListener('click', () => {
             currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
             if (currentTheme === 'light') {
@@ -615,13 +588,11 @@
             }
             localStorage.setItem('theme', currentTheme);
             
-            // Update map tiles if map exists
             if (map) {
                 updateMapTiles();
             }
         });
 
-        // Map tiles based on theme
         function getMapTiles() {
             return currentTheme === 'light' 
                 ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
@@ -636,7 +607,6 @@
             tileLayer = L.tileLayer(getMapTiles(), { maxZoom: 19 }).addTo(map);
         }
 
-        // Country code to flag emoji
         function getFlag(countryCode) {
             if (!countryCode || countryCode === 'XX') return '🏳️';
             const codePoints = countryCode
@@ -646,7 +616,6 @@
             return String.fromCodePoint(...codePoints);
         }
 
-        // Show screen
         function showScreen(screen) {
             [chooseScreen, loadingScreen, errorScreen, dataScreen].forEach(s => s.classList.add('hidden'));
             screen.classList.remove('hidden');
@@ -657,7 +626,6 @@
             }
         }
 
-        // Update UI with data
         function updateUI(data) {
             document.getElementById('ip-text').textContent = data.ip;
             document.getElementById('city').textContent = data.city;
@@ -669,7 +637,6 @@
             document.getElementById('hostname').textContent = data.hostname || '—';
             document.getElementById('coords').textContent = `${data.lat}, ${data.lon}`;
 
-            // Update map
             if (!map) {
                 map = L.map('map', { zoomControl: false, attributionControl: false })
                     .setView([data.lat, data.lon], 10);
@@ -682,11 +649,9 @@
 
             showScreen(dataScreen);
             
-            // Fix map size after display
             setTimeout(() => map.invalidateSize(), 100);
         }
 
-        // Fetch data
         async function fetchData(source) {
             showScreen(loadingScreen);
             
@@ -723,7 +688,6 @@
             }
         }
 
-        // Toggle click handlers
         function setActiveOption(source) {
             if (source === 'browser') {
                 optBrowser.classList.add('active');
@@ -744,7 +708,6 @@
         optBrowser.addEventListener('click', () => setActiveOption('browser'));
         optServer.addEventListener('click', () => setActiveOption('server'));
 
-        // Copy IP
         ipBadge.addEventListener('click', async () => {
             const ip = document.getElementById('ip-text').textContent;
             if (ip && ip !== '—') {
@@ -754,22 +717,15 @@
             }
         });
 
-        // Refresh data
         refreshBtn.addEventListener('click', () => {
             if (currentSource) {
-                // Add spinning animation
                 refreshBtn.classList.add('spinning');
                 setTimeout(() => refreshBtn.classList.remove('spinning'), 800);
-                
-                // Refetch data
                 fetchData(currentSource);
-                
-                // Also refresh usage
                 fetchUsage();
             }
         });
 
-        // Fetch API usage
         async function fetchUsage() {
             try {
                 const res = await fetch('/api/usage');
@@ -786,17 +742,14 @@
                 const day = data.day;
                 const percentage = (used / limit) * 100;
                 
-                // Update UI
                 document.getElementById('usage-used').textContent = used.toLocaleString();
                 document.getElementById('usage-limit').textContent = limit.toLocaleString();
                 document.getElementById('usage-day').textContent = day.toLocaleString();
                 document.getElementById('usage-remaining').textContent = `Осталось: ${remaining.toLocaleString()}`;
                 
-                // Update progress bar
                 const progressFill = document.getElementById('progress-fill');
                 progressFill.style.width = `${Math.min(percentage, 100)}%`;
                 
-                // Update colors based on usage
                 const remainingEl = document.getElementById('usage-remaining');
                 progressFill.classList.remove('warning', 'danger');
                 remainingEl.classList.remove('warning', 'danger');
@@ -814,7 +767,6 @@
             }
         }
 
-        // Load usage on page load
         fetchUsage();
     </script>
 </body>
