@@ -16,6 +16,8 @@ function formatIpData(data) {
         country: data.country || 'XX',
         org: data.org ? data.org.split(' ').slice(1).join(' ') : 'Unknown',
         timezone: data.timezone || 'UTC',
+        postal: data.postal || '—',
+        hostname: data.hostname || '—',
         lat: parseFloat(lat),
         lon: parseFloat(lon)
     };
